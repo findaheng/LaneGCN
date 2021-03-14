@@ -96,7 +96,15 @@ def main():
         cities = cities,
     )
     # torch.save(res,f"{config['save_dir']}/results.pkl")
-    
+
+    ### Francis Indaheng's edits start here...
+    import csv
+    with open(f"{config['save_dir']}/predictions.csv", 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        for pred in preds:
+            writer.writerow()  # TODO
+    ### ...Francis Indaheng's edits end here
+
     # evaluate or submit
     if args.split == "val":
         # for val set: compute metric
