@@ -192,7 +192,7 @@ class ArgoDataset(Dataset):
     def get_lane_graph(self, data):
         from scenic.domains.driving.roads import Network
         network = Network.fromFile(self.map_param)
-        graph = network.toLaneGCNGraph()
+        graph = network.toLaneGraph()
 
         for k1 in ['pre', 'suc']:
             for k2 in ['u', 'v']:
