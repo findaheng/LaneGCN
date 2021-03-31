@@ -77,50 +77,24 @@ def main():
 
     # begin inference
     preds = {}
-    gts = {}
-    cities = {}
     for ii, data in tqdm(enumerate(data_loader)):
         data = dict(data)
         with torch.no_grad():
             output = net(data)
             results = [x[0:1].detach().cpu().numpy() for x in output["reg"]]
-        for i, (argo_idx, pred_traj) in enumerate(zip(data["argo_id"], results)):
-            preds[argo_idx] = pred_traj.squeeze()
-            cities[argo_idx] = data["city"][i]
-            gts[argo_idx] = data["gt_preds"][i][0] if "gt_preds" in data else None
+        for i, (idx, pred_traj) in enumerate(zip(data["argo_id"], results)):
+            # NOTE: Produces 6 predictions, so I just take the first
+            preds[idx] = pred_traj.squeeze()[0]  # has shape (30, 2)
 
-    # save for further visualization
-    res = dict(
-        preds = preds,
-        gts = gts,
-        cities = cities,
-    )
-    # torch.save(res,f"{config['save_dir']}/results.pkl")
-
-    ### Francis Indaheng's edits start here...
+    # save predictions
     import csv
-    with open(f"{config['save_dir']}/predictions.csv", 'w', newline='') as csvfile:
+    for idx, pred in preds.items():
+        with open(f"{config['save_dir']}/predictions_{idx}.csv", 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        for pred in preds:
-            writer.writerow()  # TODO
-    ### ...Francis Indaheng's edits end here
-
-    # evaluate or submit
-    if args.split == "val":
-        # for val set: compute metric
-        from argoverse.evaluation.eval_forecasting import (
-            compute_forecasting_metrics,
-        )
-        # Max #guesses (K): 6
-        _ = compute_forecasting_metrics(preds, gts, cities, 6, 30, 2)
-        # Max #guesses (K): 1
-        _ = compute_forecasting_metrics(preds, gts, cities, 1, 30, 2)
-    else:
-        # for test set: save as h5 for submission in evaluation server
-        from argoverse.evaluation.competition_util import generate_forecasting_h5
-        generate_forecasting_h5(preds, f"{config['save_dir']}/submit.h5")  # this might take awhile
-    import ipdb;ipdb.set_trace()
-
+        writer.writerow(['X', 'Y'])
+        for row in pred:
+            writer.writerow(row)
+        f.close()
 
 if __name__ == "__main__":
     main()
