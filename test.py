@@ -85,7 +85,7 @@ def main():
         with torch.no_grad():
             output = net(data)
             results = [x[0:1].detach().cpu().numpy() for x in output["reg"]]
-        for i, (idx, pred_traj) in enumerate(zip(data["argo_id"], results)):
+        for idx, pred_traj in zip(data["argo_id"], results):
             # NOTE: Produces 6 predictions, so I just take the first
             preds[idx] = pred_traj.squeeze()[0]  # has shape (30, 2)
 
