@@ -14,10 +14,11 @@ from skimage.transform import rotate
 
 
 class ArgoDataset(Dataset):
-    def __init__(self, split, config, train=True):
+    def __init__(self, split, config, map_param, train=True):
         self.config = config
         self.train = train
-        
+        self.map_param = map_param  # for Scenic network
+
         if 'preprocess' in config and config['preprocess']:
             if train:
                 self.split = np.load(self.config['preprocess_train'], allow_pickle=True)
@@ -26,10 +27,6 @@ class ArgoDataset(Dataset):
         else:
             self.avl = ArgoverseForecastingLoader(split)
             self.am = ArgoverseMap()
-
-        if 'raster' in config and config['raster']:
-            #TODO: DELETE
-            self.map_query = MapQuery(config['map_scale'])
             
     def __getitem__(self, idx):
         if 'preprocess' in self.config and self.config['preprocess']:
@@ -69,31 +66,11 @@ class ArgoDataset(Dataset):
                         new_data[key] = ref_copy(data[key])
                 data = new_data
            
-            if 'raster' in self.config and self.config['raster']:
-                data.pop('graph')
-                x_min, x_max, y_min, y_max = self.config['pred_range']
-                cx, cy = data['orig']
-                
-                region = [cx + x_min, cx + x_max, cy + y_min, cy + y_max]
-                raster = self.map_query.query(region, data['theta'], data['city'])
-
-                data['raster'] = raster
             return data
 
         data = self.read_argo_data(idx)
         data = self.get_obj_feats(data)
         data['idx'] = idx
-
-        if 'raster' in self.config and self.config['raster']:
-            x_min, x_max, y_min, y_max = self.config['pred_range']
-            cx, cy = data['orig']
-
-            region = [cx + x_min, cx + x_max, cy + y_min, cy + y_max]
-            raster = self.map_query.query(region, data['theta'], data['city'])
-
-            data['raster'] = raster
-            return data
-
         data['graph'] = self.get_lane_graph(data)
         return data
     
@@ -211,12 +188,10 @@ class ArgoDataset(Dataset):
         data['gt_preds'] = gt_preds
         data['has_preds'] = has_preds
         return data
-
-    ### Francis Indaheng's edits start here... 
     
-    def get_lane_graph(self, data, map_param):
+    def get_lane_graph(self, data):
         from scenic.domains.driving.roads import Network
-        network = Network.fromFile(map_param)  # TODO: Figure out map_param input
+        network = Network.fromFile(self.map_param)
         graph = network.toLaneGCNGraph()
 
         for k1 in ['pre', 'suc']:
@@ -231,157 +206,13 @@ class ArgoDataset(Dataset):
 
         return graph
 
-    # def get_lane_graph(self, data):
-    #     """Get a rectangle area defined by pred_range."""
-    #     x_min, x_max, y_min, y_max = self.config['pred_range']
-    #     radius = max(abs(x_min), abs(x_max)) + max(abs(y_min), abs(y_max))
-    #     lane_ids = self.am.get_lane_ids_in_xy_bbox(data['orig'][0], data['orig'][1], data['city'], radius)
-    #     lane_ids = copy.deepcopy(lane_ids)
-        
-    #     lanes = dict()
-    #     for lane_id in lane_ids:
-    #         lane = self.am.city_lane_centerlines_dict[data['city']][lane_id]
-    #         lane = copy.deepcopy(lane)
-    #         centerline = np.matmul(data['rot'], (lane.centerline - data['orig'].reshape(-1, 2)).T).T
-    #         x, y = centerline[:, 0], centerline[:, 1]
-    #         if x.max() < x_min or x.min() > x_max or y.max() < y_min or y.min() > y_max:
-    #             continue
-    #         else:
-    #             """Getting polygons requires original centerline"""
-    #             polygon = self.am.get_lane_segment_polygon(lane_id, data['city'])
-    #             polygon = copy.deepcopy(polygon)
-    #             lane.centerline = centerline
-    #             lane.polygon = np.matmul(data['rot'], (polygon[:, :2] - data['orig'].reshape(-1, 2)).T).T
-    #             lanes[lane_id] = lane
-            
-    #     lane_ids = list(lanes.keys())
-    #     ctrs, feats, turn, control, intersect = [], [], [], [], []
-    #     for lane_id in lane_ids:
-    #         lane = lanes[lane_id]
-    #         ctrln = lane.centerline
-    #         num_segs = len(ctrln) - 1
-            
-    #         ctrs.append(np.asarray((ctrln[:-1] + ctrln[1:]) / 2.0, np.float32))
-    #         feats.append(np.asarray(ctrln[1:] - ctrln[:-1], np.float32))
-            
-    #         x = np.zeros((num_segs, 2), np.float32)
-    #         if lane.turn_direction == 'LEFT':
-    #             x[:, 0] = 1
-    #         elif lane.turn_direction == 'RIGHT':
-    #             x[:, 1] = 1
-    #         else:
-    #             pass
-    #         turn.append(x)
-
-    #         control.append(lane.has_traffic_control * np.ones(num_segs, np.float32))
-    #         intersect.append(lane.is_intersection * np.ones(num_segs, np.float32))
-            
-    #     node_idcs = []
-    #     count = 0
-    #     for i, ctr in enumerate(ctrs):
-    #         node_idcs.append(range(count, count + len(ctr)))
-    #         count += len(ctr)
-    #     num_nodes = count
-        
-    #     pre, suc = dict(), dict()
-    #     for key in ['u', 'v']:
-    #         pre[key], suc[key] = [], []
-    #     for i, lane_id in enumerate(lane_ids):
-    #         lane = lanes[lane_id]
-    #         idcs = node_idcs[i]
-            
-    #         pre['u'] += idcs[1:]
-    #         pre['v'] += idcs[:-1]
-    #         if lane.predecessors is not None:
-    #             for nbr_id in lane.predecessors:
-    #                 if nbr_id in lane_ids:
-    #                     j = lane_ids.index(nbr_id)
-    #                     pre['u'].append(idcs[0])
-    #                     pre['v'].append(node_idcs[j][-1])
-                    
-    #         suc['u'] += idcs[:-1]
-    #         suc['v'] += idcs[1:]
-    #         if lane.successors is not None:
-    #             for nbr_id in lane.successors:
-    #                 if nbr_id in lane_ids:
-    #                     j = lane_ids.index(nbr_id)
-    #                     suc['u'].append(idcs[-1])
-    #                     suc['v'].append(node_idcs[j][0])
-
-    #     lane_idcs = []
-    #     for i, idcs in enumerate(node_idcs):
-    #         lane_idcs.append(i * np.ones(len(idcs), np.int64))
-    #     lane_idcs = np.concatenate(lane_idcs, 0)
-
-    #     pre_pairs, suc_pairs, left_pairs, right_pairs = [], [], [], []
-    #     for i, lane_id in enumerate(lane_ids):
-    #         lane = lanes[lane_id]
-
-    #         nbr_ids = lane.predecessors
-    #         if nbr_ids is not None:
-    #             for nbr_id in nbr_ids:
-    #                 if nbr_id in lane_ids:
-    #                     j = lane_ids.index(nbr_id)
-    #                     pre_pairs.append([i, j])
-
-    #         nbr_ids = lane.successors
-    #         if nbr_ids is not None:
-    #             for nbr_id in nbr_ids:
-    #                 if nbr_id in lane_ids:
-    #                     j = lane_ids.index(nbr_id)
-    #                     suc_pairs.append([i, j])
-
-    #         nbr_id = lane.l_neighbor_id
-    #         if nbr_id is not None:
-    #             if nbr_id in lane_ids:
-    #                 j = lane_ids.index(nbr_id)
-    #                 left_pairs.append([i, j])
-
-    #         nbr_id = lane.r_neighbor_id
-    #         if nbr_id is not None:
-    #             if nbr_id in lane_ids:
-    #                 j = lane_ids.index(nbr_id)
-    #                 right_pairs.append([i, j])
-    #     pre_pairs = np.asarray(pre_pairs, np.int64)
-    #     suc_pairs = np.asarray(suc_pairs, np.int64)
-    #     left_pairs = np.asarray(left_pairs, np.int64)
-    #     right_pairs = np.asarray(right_pairs, np.int64)
-                    
-    #     graph = dict()
-    #     graph['ctrs'] = np.concatenate(ctrs, 0)
-    #     graph['num_nodes'] = num_nodes
-    #     graph['feats'] = np.concatenate(feats, 0)
-    #     graph['turn'] = np.concatenate(turn, 0)
-    #     graph['control'] = np.concatenate(control, 0)
-    #     graph['intersect'] = np.concatenate(intersect, 0)
-    #     graph['pre'] = [pre]
-    #     graph['suc'] = [suc]
-    #     graph['lane_idcs'] = lane_idcs
-    #     graph['pre_pairs'] = pre_pairs
-    #     graph['suc_pairs'] = suc_pairs
-    #     graph['left_pairs'] = left_pairs
-    #     graph['right_pairs'] = right_pairs
-        
-    #     for k1 in ['pre', 'suc']:
-    #         for k2 in ['u', 'v']:
-    #             graph[k1][0][k2] = np.asarray(graph[k1][0][k2], np.int64)
-        
-    #     for key in ['pre', 'suc']:
-    #         if 'scales' in self.config and self.config['scales']:
-    #             #TODO: delete here
-    #             graph[key] += dilated_nbrs2(graph[key][0], graph['num_nodes'], self.config['scales'])
-    #         else:
-    #             graph[key] += dilated_nbrs(graph[key][0], graph['num_nodes'], self.config['num_scales'])
-    #     return graph
-    
-    ### ...Francis Indaheng's edits end here
-
 
 class ArgoTestDataset(ArgoDataset):
-    def __init__(self, split, config, train=False):
+    def __init__(self, split, config, map_param, train=False):
 
         self.config = config
         self.train = train
+        self.map_param = map_param
         split2 = config['val_split'] if split=='val' else config['test_split']
         split = self.config['preprocess_val'] if split=='val' else self.config['preprocess_test']
 
@@ -447,78 +278,6 @@ class ArgoTestDataset(ArgoDataset):
             return len(self.split)
         else:
             return len(self.avl)
-
-class MapQuery(object):
-    #TODO: DELETE HERE No used
-    """[Deprecated] Query rasterized map for a given region"""
-    def __init__(self, scale, autoclip=True):
-        """
-        scale: one meter -> num of `scale` voxels 
-        """
-        super(MapQuery, self).__init__()
-        assert scale in (1,2,4,8)
-        self.scale = scale
-        root_dir = '/mnt/yyz_data_1/users/ming.liang/argo/tmp/map_npy/'
-        mia_map = np.load(f"{root_dir}/mia_{scale}.npy")
-        pit_map = np.load(f"{root_dir}/pit_{scale}.npy")
-        self.autoclip = autoclip
-        self.map = dict(
-            MIA=mia_map,
-            PIT=pit_map
-        )
-        self.OFFSET = dict(
-                MIA=np.array([502,-545]),
-                PIT=np.array([-642,211]),
-            )
-        self.SHAPE=dict(
-                MIA=(3674, 1482),
-                PIT= (3043, 4259)
-            )
-    def query(self,region,theta=0,city='MIA'):
-        """
-        region: [x0,x1,y0,y1]
-        city: 'MIA' or 'PIT'
-        theta: rotation of counter-clockwise, angel/degree likd 90,180
-        return map_mask: 2D array of shape (x1-x0)*scale, (y1-y0)*scale
-        """
-        region = [int(x) for x in region]
-
-        map_data = self.map[city]
-        offset = self.OFFSET[city]
-        shape = self.SHAPE[city]
-        x0,x1,y0,y1 = region
-        x0,x1 = x0+offset[0],x1+offset[0]
-        y0,y1 = y0+offset[1],y1+offset[1]
-        x0,x1,y0,y1 = [round(_*self.scale) for _ in [x0,x1,y0,y1]]
-        # extend the crop region to 2x -- for rotation
-        H,W = y1-y0,x1-x0
-        x0 -= int(round(W/2))
-        y0 -= int(round(H/2))
-        x1 += int(round(W/2))
-        y1 += int(round(H/2))
-        results = np.zeros([H*2,W*2])
-        # padding of crop -- for outlier
-        xstart,ystart=0,0
-        if self.autoclip:
-            if x0<0:
-                xstart = -x0 
-                x0 = 0
-            if y0<0:
-                ystart = -y0 
-                y0 = 0
-            x1 = min(x1,shape[1]*self.scale-1)
-            y1 = min(y1,shape[0]*self.scale-1)
-        map_mask = map_data[y0:y1,x0:x1]
-        _H,_W = map_mask.shape
-        results[ystart:ystart+_H, xstart:xstart+_W]=map_mask
-        results = results[::-1] # flip to cartesian
-        # rotate and remove margin
-        rot_map = rotate(results,theta,center=None,order=0) # center None->map center
-        H,W = results.shape
-        outputH,outputW = round(H/2),round(W/2)
-        startH,startW = round(H//4),round(W//4)
-        crop_map = rot_map[startH:startH+outputH,startW:startW+outputW]
-        return crop_map
 
 
 def ref_copy(data):
