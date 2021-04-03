@@ -56,11 +56,11 @@ def main():
 
     os.makedirs(os.path.dirname(config['preprocess_train']),exist_ok=True)    
 
-    test(config, args.numFiles)
+    test(config, args.map_param, args.numFiles)
 
 
-def test(config, N):
-    dataset = Dataset(config["test_split"], config, args.map_param, train=False)
+def test(config, map_param, N):
+    dataset = Dataset(config["test_split"], config, map_param, train=False)
     test_loader = DataLoader(
         dataset,
         batch_size=config["val_batch_size"],
