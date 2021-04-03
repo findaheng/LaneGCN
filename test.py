@@ -93,11 +93,11 @@ def main():
     import csv
     for idx, pred in preds.items():
         with open(f"{config['save_dir']}/predictions_{idx}.csv", 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(['X', 'Y'])
-        for row in pred:
-            writer.writerow(row)
-        f.close()
+            writer = csv.writer(csvfile)
+            writer.writerow(['X', 'Y'])
+            for row in pred:
+                writer.writerow(row)
+        csvfile.close()
 
 if __name__ == "__main__":
     main()
