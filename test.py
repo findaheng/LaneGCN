@@ -43,10 +43,10 @@ parser.add_argument(
 )
 parser.add_argument("--eval", action="store_true", default=True)
 parser.add_argument(
-    "--split", type=str, default="val", help='data split, "val" or "test"'
+    "--split", type=str, default="test", help='data split, "val" or "test"'
 )
 parser.add_argument(
-    "--weight", default="", type=str, metavar="WEIGHT", help="checkpoint path"
+    "--weight", default="/home/carla_challenge/Desktop/francis/LaneGCN/36.000.ckpt", type=str, metavar="WEIGHT", help="checkpoint path"
 )
 parser.add_argument(
     "--map_path", default="/home/carla_challenge/Desktop/francis/Scenic/tests/formats/opendrive/maps/CARLA/Town05.xodr", type=str, help="absolute path to carla map"
