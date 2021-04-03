@@ -37,6 +37,8 @@ parser.add_argument(
 parser.add_argument(
     "-n", "--numFiles", default=1, type=int, help="number of CSV files to preprocess"
 )
+parser.add_argument(
+    "--map_param", default="/home/carla_challenge/Desktop/francis/Scenic/tests/formats/opendrive/maps/CARLA/Town05.xodr", type=str, help="carla map path")
 
 
 def main():
@@ -58,7 +60,7 @@ def main():
 
 
 def test(config, N):
-    dataset = Dataset(config["test_split"], config, train=False)
+    dataset = Dataset(config["test_split"], config, args.map_param, train=False)
     test_loader = DataLoader(
         dataset,
         batch_size=config["val_batch_size"],
