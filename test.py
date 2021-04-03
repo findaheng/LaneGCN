@@ -39,7 +39,7 @@ sys.path.insert(0, root_path)
 # define parser
 parser = argparse.ArgumentParser(description="Argoverse Motion Forecasting in Pytorch")
 parser.add_argument(
-    "-m", "--model", default="angle90", type=str, metavar="MODEL", help="model name"
+    "-m", "--model", default="lanegcn", type=str, metavar="MODEL", help="model name"
 )
 parser.add_argument("--eval", action="store_true", default=True)
 parser.add_argument(
