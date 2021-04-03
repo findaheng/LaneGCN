@@ -26,7 +26,6 @@ class ArgoDataset(Dataset):
                 self.split = np.load(self.config['preprocess_val'], allow_pickle=True)
         else:
             self.avl = ArgoverseForecastingLoader(split)
-            self.am = ArgoverseMap()
             
     def __getitem__(self, idx):
         if 'preprocess' in self.config and self.config['preprocess']:
@@ -224,7 +223,6 @@ class ArgoTestDataset(ArgoDataset):
                 self.split = np.load(split, allow_pickle=True)
         else:
             self.avl = ArgoverseForecastingLoader(split)
-            self.am = ArgoverseMap()
             
 
     def __getitem__(self, idx):
