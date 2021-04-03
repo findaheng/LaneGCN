@@ -49,7 +49,7 @@ parser.add_argument(
     "--weight", default="", type=str, metavar="WEIGHT", help="checkpoint path"
 )
 parser.add_argument(
-    "--carla_map_path", default="", type=str, help="absolute path to carla map"
+    "--map_path", default="/home/carla_challenge/Desktop/francis/Scenic/tests/formats/opendrive/maps/CARLA/Town05.xodr", type=str, help="absolute path to carla map"
 )
 
 
@@ -68,7 +68,7 @@ def main():
     net.eval()
 
     # Data loader for evaluation
-    dataset = ArgoTestDataset(args.split, config, args.carla_map_path, train=False)
+    dataset = ArgoTestDataset(args.split, config, args.map_path, train=False)
     data_loader = DataLoader(
         dataset,
         batch_size=config["val_batch_size"],
