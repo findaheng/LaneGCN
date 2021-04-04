@@ -675,7 +675,7 @@ class Att(nn.Module):
         for i in range(batch_size):
             dist = agt_ctrs[i].view(-1, 1, 2) - ctx_ctrs[i].view(1, -1, 2)
             dist = torch.sqrt((dist ** 2).sum(2))
-            mask = dist <= dist_th
+            mask = dist <= dist_th + 4  # NOTE: Fails without adding 4 to threshold...
 
             idcs = torch.nonzero(mask, as_tuple=False)
             if len(idcs) == 0:
