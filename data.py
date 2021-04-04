@@ -211,7 +211,7 @@ class ArgoTestDataset(ArgoDataset):
 
         self.config = config
         self.train = train
-        self.map_param = map_param
+        self.map_param = map_param  # for Scenic network
         split2 = config['val_split'] if split=='val' else config['test_split']
         split = self.config['preprocess_val'] if split=='val' else self.config['preprocess_test']
 
