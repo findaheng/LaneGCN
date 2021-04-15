@@ -192,10 +192,6 @@ class ArgoDataset(Dataset):
         from scenic.domains.driving.roads import Network
         network = Network.fromFile(self.map_param)
         graph = network.toLaneGraph()
-
-        for k1 in ['pre', 'suc']:
-            for k2 in ['u', 'v']:
-                graph[k1][0][k2] = np.asarray(graph[k1][0][k2], np.int64)
         
         for key in ['pre', 'suc']:
             if 'scales' in self.config and self.config['scales']:
