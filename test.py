@@ -52,7 +52,7 @@ parser.add_argument(
     "--map_path", default="/home/carla_challenge/Desktop/francis/Scenic/tests/formats/opendrive/maps/CARLA/Town05.xodr", type=str, help="absolute path to carla map"
 )
 parser.add_argument(
-	"--worker_num", default=0, type=int, help="Parallel worker number"
+    "--worker_num", default=0, type=int, help="Parallel worker number"
 )
 
 
@@ -94,13 +94,13 @@ def main():
     # save predictions
     import csv
     for idx, pred in preds.items():
-    	for traj in pred:
-	        with open(f"{config['save_dir']}/predictions_{args.worker_num}_{idx}.csv", 'w', newline='') as csvfile:
-	            writer = csv.writer(csvfile)
-	            writer.writerow(['X', 'Y'])
-	            for row in traj:
-	                writer.writerow(row)
-        csvfile.close()
+        for traj in pred:
+            with open(f"{config['save_dir']}/predictions_{idx}_{args.worker_num}.csv", 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['X', 'Y'])
+                for row in traj:
+                    writer.writerow(row)
+            csvfile.close()
 
 if __name__ == "__main__":
     main()
