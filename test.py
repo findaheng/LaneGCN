@@ -51,6 +51,9 @@ parser.add_argument(
 parser.add_argument(
     "--map_path", default="/home/carla_challenge/Desktop/francis/Scenic/tests/formats/opendrive/maps/CARLA/Town05.xodr", type=str, help="absolute path to carla map"
 )
+parser.add_argument(
+	"--worker_num", default=0, type=int, help="Parallel worker number"
+)
 
 
 def main():
@@ -86,17 +89,17 @@ def main():
             output = net(data)
             results = [x[0:1].detach().cpu().numpy() for x in output["reg"]]
         for idx, pred_traj in zip(data["argo_id"], results):
-            # NOTE: Produces 6 predictions, so I just take the first
-            preds[idx] = pred_traj.squeeze()[0]  # has shape (30, 2)
+            preds[idx] = pred_traj.squeeze()
 
     # save predictions
     import csv
     for idx, pred in preds.items():
-        with open(f"{config['save_dir']}/predictions_{idx}.csv", 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(['X', 'Y'])
-            for row in pred:
-                writer.writerow(row)
+    	for traj in pred:
+	        with open(f"{config['save_dir']}/predictions_{args.worker_num}_{idx}.csv", 'w', newline='') as csvfile:
+	            writer = csv.writer(csvfile)
+	            writer.writerow(['X', 'Y'])
+	            for row in traj:
+	                writer.writerow(row)
         csvfile.close()
 
 if __name__ == "__main__":
