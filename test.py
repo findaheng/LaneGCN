@@ -93,12 +93,12 @@ def main():
 
     # save predictions
     import csv
-    for idx, pred in preds.items():
-        for traj in pred:
-            with open(f"{config['save_dir']}/predictions_{idx}_{args.worker_num}.csv", 'w', newline='') as csvfile:
+    for _, pred in preds.items():
+        for i, mode in enumerate(pred):
+            with open(f"{config['save_dir']}/predictions_{i}_{args.worker_num}.csv", 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow(['X', 'Y'])
-                for row in traj:
+                for row in mode:
                     writer.writerow(row)
             csvfile.close()
 
