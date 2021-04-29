@@ -95,7 +95,7 @@ def main():
     import csv
     for _, pred in preds.items():
         for i, mode in enumerate(pred):
-            with open(f"{config['save_dir']}/predictions_{i}_{args.worker_num}.csv", 'w', newline='') as csvfile:
+            with open(f"{config['save_dir']}/predictions_{args.worker_num}_{i}.csv", 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow(['X', 'Y'])
                 for row in mode:
