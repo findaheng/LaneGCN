@@ -70,7 +70,7 @@ config["preprocess_train"] = os.path.join(
 config["preprocess_val"] = os.path.join(
     root_path,"dataset", "preprocess", "val_crs_dist6_angle90.p"
 )
-config['preprocess_test'] = os.path.join(root_path, "dataset",'preprocess', 'test_test.p')
+config['preprocess_test'] = os.path.join(root_path, "dataset",'preprocess')
 
 """Model"""
 config["rot_aug"] = False
@@ -902,10 +902,13 @@ def pred_metrics(preds, gt_preds, has_preds):
 
 def get_model():
     net = Net(config)
-    net = net.cuda()
+    #net = net.cuda()
+    net = net.cpu()
 
-    loss = Loss(config).cuda()
-    post_process = PostProcess(config).cuda()
+    #loss = Loss(config).cuda()
+    loss = Loss(config).cpu()
+    #post_process = PostProcess(config).cuda()
+    post_process = PostProcess(config).cpu()
 
     params = net.parameters()
     opt = Optimizer(params, config)

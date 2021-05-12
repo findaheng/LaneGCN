@@ -17,7 +17,6 @@ from importlib import import_module
 from tqdm import tqdm
 import numpy as np
 import torch
-device = torch.device('cpu')
 from torch.utils.data import DataLoader
 from data import ArgoDataset as Dataset, from_numpy, ref_copy, collate_fn
 from utils import Logger, load_pretrain, gpu
@@ -40,6 +39,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "--map_param", default="/home/carla_challenge/Desktop/francis/Scenic/tests/formats/opendrive/maps/CARLA/Town05.xodr", type=str, help="carla map path")
+parser.add_argument(
+    "-w", "--worker_num", default=0, type=int, help="Parallel worker number"
+)
 
 
 def main():
@@ -54,6 +56,9 @@ def main():
     config["workers"] = 32
     config['cross_dist'] = 6
     config['cross_angle'] = 0.5 * np.pi
+
+    config['test_split'] = os.path.join(config['test_split'], f'{args.worker_num}.csv')
+    config['preprocess_test'] = os.path.join(config['preprocess_test'], f'test_test_{args.worker_num}.p')
 
     os.makedirs(os.path.dirname(config['preprocess_train']),exist_ok=True)    
 

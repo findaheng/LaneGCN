@@ -52,7 +52,7 @@ parser.add_argument(
     "--map_path", default="/home/carla_challenge/Desktop/francis/Scenic/tests/formats/opendrive/maps/CARLA/Town05.xodr", type=str, help="absolute path to carla map"
 )
 parser.add_argument(
-    "--worker_num", default=0, type=int, help="Parallel worker number"
+    "-w", "--worker_num", default=0, type=int, help="Parallel worker number"
 )
 
 
