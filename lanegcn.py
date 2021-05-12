@@ -117,7 +117,7 @@ class Net(nn.Module):
 
         # config alterations to support parallel execution
         self.config['preprocess_test'] = os.path.join(config['preprocess_test'], f'test_test_{worker_num}.p')
-        self.config['test_split'] = os.path.join(config['test_split'], f'data_{args.worker_num}')
+        self.config['test_split'] = os.path.join(config['test_split'], f'data_{worker_num}')
 
         self.actor_net = ActorNet(config)
         self.map_net = MapNet(config)
