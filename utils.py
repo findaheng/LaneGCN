@@ -70,7 +70,7 @@ def gpu(data):
         data = {key:gpu(_data) for key,_data in data.items()}
     elif isinstance(data, torch.Tensor):
         #data = data.contiguous().cuda(non_blocking=True)
-        data = data.contiguous().cpu(non_blocking=True)
+        data = data.contiguous().cpu()
     return data
 
 
