@@ -60,7 +60,7 @@ def main():
     # Import all settings for experiment.
     args = parser.parse_args()
     model = import_module(args.model)
-    config, _, collate_fn, net, loss, post_process, opt = model.get_model()
+    config, _, collate_fn, net, loss, post_process, opt = model.get_model(args.worker_num)
 
     # load pretrain model
     ckpt_path = args.weight

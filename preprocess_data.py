@@ -49,16 +49,13 @@ def main():
     args = parser.parse_args()
     model = import_module(args.model)
     print(args.model)
-    config, *_ = model.get_model()
+    config, *_ = model.get_model(args.worker_num)
 
     config["preprocess"] = False  # we use raw data to generate preprocess data
     config["val_workers"] = 32
     config["workers"] = 32
     config['cross_dist'] = 6
     config['cross_angle'] = 0.5 * np.pi
-
-    config['test_split'] = os.path.join(config['test_split'], f'{args.worker_num}.csv')
-    config['preprocess_test'] = os.path.join(config['preprocess_test'], f'test_test_{args.worker_num}.p')
 
     os.makedirs(os.path.dirname(config['preprocess_train']),exist_ok=True)    
 

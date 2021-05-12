@@ -60,7 +60,7 @@ config["train_split"] = os.path.join(
     root_path, "dataset/train/data"
 )
 config["val_split"] = os.path.join(root_path, "dataset/val/data")
-config["test_split"] = os.path.join(root_path, "dataset/test_obs/data")
+config["test_split"] = os.path.join(root_path, "dataset/test_obs")
 
 # Preprocessed Dataset
 config["preprocess"] = True # whether use preprocess or not
@@ -111,9 +111,13 @@ class Net(nn.Module):
         4. PredNet: prediction header for motion forecasting using 
            feature from A2A
     """
-    def __init__(self, config):
+    def __init__(self, config, worker_num):
         super(Net, self).__init__()
         self.config = config
+
+        # config alterations to support parallel execution
+        self.config['preprocess_test'] = os.path.join(config['preprocess_test'], f'test_test_{worker_num}.p')
+        self.config['test_split'] = os.path.join(config['test_split'], f'data_{args.worker_num}')
 
         self.actor_net = ActorNet(config)
         self.map_net = MapNet(config)
@@ -900,8 +904,8 @@ def pred_metrics(preds, gt_preds, has_preds):
     return ade1, fde1, ade, fde, min_idcs
 
 
-def get_model():
-    net = Net(config)
+def get_model(worker_num):
+    net = Net(config, worker_num)
     #net = net.cuda()
     net = net.cpu()
 
