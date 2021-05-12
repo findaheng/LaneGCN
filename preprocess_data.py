@@ -17,6 +17,7 @@ from importlib import import_module
 from tqdm import tqdm
 import numpy as np
 import torch
+device = torch.device('cpu')
 from torch.utils.data import DataLoader
 from data import ArgoDataset as Dataset, from_numpy, ref_copy, collate_fn
 from utils import Logger, load_pretrain, gpu

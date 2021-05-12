@@ -9,6 +9,7 @@ from fractions import gcd
 from numbers import Number
 
 import torch
+device = torch.device('cpu')
 from torch import Tensor, nn
 from torch.nn import functional as F
 
